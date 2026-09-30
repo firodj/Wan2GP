@@ -13,6 +13,14 @@ def query_download_def():
     return {"url": "https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx", "filename": "rembg/u2net.onnx", "md5": "60024c5c889badc19c04ad937298a77b"}
 
 
+def md5sum(f):
+    h  = hashlib.md5()
+    b  = bytearray(128*1024)
+    mv = memoryview(b)
+    while n := f.readinto(mv):
+        h.update(mv[:n])
+    return h.hexdigest()
+
 def ensure_assets(gen=None):
     gen = resolve_download_gen(gen)
     check_download_cancelled(gen)
@@ -27,7 +35,8 @@ def ensure_assets(gen=None):
     except OSError as exc:
         raise DownloadError(f"Unable to Download Background Removal Model: {exc}") from exc
     with open(path, "rb") as source:
-        digest = hashlib.file_digest(source, "md5").hexdigest()
+        # digest = hashlib.file_digest(source, "md5").hexdigest()
+        digest = md5sum(source)
     if digest != definition["md5"]:
         os.remove(path)
         raise DownloadError("Background Removal Model Checksum Mismatch; Please Retry")
